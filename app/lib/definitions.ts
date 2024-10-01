@@ -16,7 +16,7 @@ export type Customer = {
   image_url: string;
 };
 
-export type TInvoiceStatus = "pending" | "paid" | "canceled";
+export type TInvoiceStatus = "pending" | "paid" | "canceled" | "overdue";
 
 export type Invoice = {
   id: string;

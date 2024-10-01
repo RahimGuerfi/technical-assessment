@@ -5,6 +5,7 @@ import {
   CheckIcon,
   ClockIcon,
   CurrencyDollarIcon,
+  ExclamationTriangleIcon,
   UserCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -146,6 +147,22 @@ export default function EditInvoiceForm({
                   className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-red-500 px-3 py-1.5 text-xs font-medium text-white"
                 >
                   Canceled <XMarkIcon className="h-4 w-4" />
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="overdue"
+                  name="status"
+                  type="radio"
+                  value="overdue"
+                  defaultChecked={invoice.status === "overdue"}
+                  className="h-4 w-4 border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                />
+                <label
+                  htmlFor="overdue"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-yellow-500 px-3 py-1.5 text-xs font-medium text-white"
+                >
+                  Overdue <ExclamationTriangleIcon className="h-4 w-4" />
                 </label>
               </div>
             </div>
