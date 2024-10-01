@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { TInvoiceStatus } from "./definitions";
 
 const FormSchema = z.object({
   id: z.string(),
@@ -105,6 +106,20 @@ export async function updateInvoice(
 
   revalidatePath("/dashboard/invoices");
   redirect("/dashboard/invoices");
+}
+
+export async function updateInvoiceStatus(id: string, status: TInvoiceStatus) {
+  try {
+    await sql`
+      UPDATE invoices
+      SET status = ${status}
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    return { message: "Database Error: Failed to Update Invoice Status." };
+  }
+
+  revalidatePath("/dashboard/invoices");
 }
 
 export async function deleteInvoice(id: string) {
