@@ -2,6 +2,7 @@ import { sql } from "@vercel/postgres";
 import {
   CustomerField,
   CustomersTableType,
+  InvoiceAuditLog,
   InvoiceForm,
   InvoicesTable,
   LatestInvoiceRaw,
@@ -140,6 +141,28 @@ export async function fetchInvoicesPages(query: string) {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch total number of invoices.");
+  }
+}
+
+export async function fetchAuditLogsByInvoiceId(id: string) {
+  try {
+    const data = await sql<InvoiceAuditLog>`
+    SELECT
+      audit_logs.invoice_id,
+      audit_logs.old_status,
+      audit_logs.new_status,
+      audit_logs.action_type,
+      audit_logs.date,
+      users.name
+    FROM audit_logs
+    JOIN users ON audit_logs.user_id = users.id
+    WHERE audit_logs.invoice_id = ${id};
+    `;
+
+    return data.rows;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch audit logs.");
   }
 }
 

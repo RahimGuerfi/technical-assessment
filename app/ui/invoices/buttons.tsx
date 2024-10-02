@@ -1,11 +1,17 @@
 import {
+  ArrowPathIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { cancelInvoice, deleteInvoice } from "@/app/lib/actions";
+import {
+  cancelInvoice,
+  deleteInvoice,
+  updateInvoiceStatusAndCreateAuditLog,
+} from "@/app/lib/actions";
+import { TInvoiceStatus } from "@/app/lib/definitions";
 
 export function CreateInvoice() {
   return (
@@ -51,6 +57,32 @@ export function CancelInvoice({ id }: { id: string }) {
       <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
         <span className="sr-only">Cancel</span>
         <XMarkIcon className="w-5" />
+      </button>
+    </form>
+  );
+}
+
+export function RestoreInvoiceState({
+  id,
+  oldStatus,
+  newStatus,
+}: {
+  id: string;
+  oldStatus: TInvoiceStatus;
+  newStatus: TInvoiceStatus;
+}) {
+  const action = updateInvoiceStatusAndCreateAuditLog.bind(null, {
+    action_type: "restore",
+    invoice_id: id,
+    old_status: oldStatus,
+    new_status: newStatus,
+  });
+
+  return (
+    <form action={action}>
+      <button type="submit" className="rounded-md border p-2 hover:bg-gray-100">
+        <span className="sr-only">Restore</span>
+        <ArrowPathIcon className="w-5" />
       </button>
     </form>
   );

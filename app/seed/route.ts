@@ -4,6 +4,22 @@ import { invoices, customers, revenue, users } from "../lib/placeholder-data";
 
 const client = await db.connect();
 
+async function createAuditLogsTable() {
+  await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await client.sql`
+  CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID NOT NULL,
+    invoice_id UUID NOT NULL,
+    old_status VARCHAR(255) NOT NULL,
+    new_status VARCHAR(255) NOT NULL,
+    action_type VARCHAR(255) NOT NULL,
+    date DATE NOT NULL
+  );
+`;
+}
+
 async function seedUsers() {
   await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
   await client.sql`
@@ -108,10 +124,11 @@ export async function GET() {
   // });
   try {
     await client.sql`BEGIN`;
-    await seedUsers();
-    await seedCustomers();
-    await seedInvoices();
-    await seedRevenue();
+    // await seedUsers();
+    // await seedCustomers();
+    // await seedInvoices();
+    // await seedRevenue();
+    await createAuditLogsTable();
     await client.sql`COMMIT`;
 
     return Response.json({ message: "Database seeded successfully" });

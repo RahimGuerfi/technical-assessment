@@ -2,7 +2,11 @@ import React from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { TInvoiceStatus } from "@/app/lib/definitions";
 import InvoiceStatus from "./status";
-import { updateInvoiceStatus } from "@/app/lib/actions";
+import {
+  createAuditLog,
+  updateInvoiceStatus,
+  updateInvoiceStatusAndCreateAuditLog,
+} from "@/app/lib/actions";
 
 type StatusDropdownItem = {
   label: string;
@@ -50,17 +54,18 @@ export default function StatusDropdown({ id, currentStatus }: Props) {
           {STATUS_DROPDOWN_ITEMS.filter(
             (item) => item.status !== currentStatus
           ).map((item) => {
-            const updateInvoiceStatusWithId = updateInvoiceStatus.bind(
-              null,
-              id,
-              item.status
-            );
+            const action = updateInvoiceStatusAndCreateAuditLog.bind(null, {
+              action_type: "change",
+              invoice_id: id,
+              old_status: currentStatus,
+              new_status: item.status,
+            });
 
             return (
               <StatusDropdownItem
                 key={item.status}
                 label={item.label}
-                action={updateInvoiceStatusWithId}
+                action={action}
               />
             );
           })}
@@ -81,8 +86,8 @@ function StatusDropdownItem({
     <form action={action}>
       <MenuItem>
         <button
-          type="submit"
           className="block w-full px-4 py-2 text-left text-xs text-gray-700 data-[focus]:bg-gray-100 data-[focus]:text-gray-900"
+          type="submit"
         >
           {label}
         </button>

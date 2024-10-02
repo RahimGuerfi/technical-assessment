@@ -88,3 +88,19 @@ export type InvoiceForm = {
   amount: number;
   status: TInvoiceStatus;
 };
+
+export type InvoiceAuditLog = {
+  invoice_id: string;
+  name: string;
+  old_status: TInvoiceStatus;
+  new_status: TInvoiceStatus;
+  action_type: "change" | "restore";
+  date: string;
+};
+
+export type CreateAuditLog = {
+  invoice_id: string;
+  old_status: TInvoiceStatus;
+  new_status: TInvoiceStatus;
+  action_type: "change" | "restore";
+};

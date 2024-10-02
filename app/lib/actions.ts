@@ -4,9 +4,9 @@ import { z } from "zod";
 import { sql } from "@vercel/postgres";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { signIn } from "@/auth";
+import { auth, signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { TInvoiceStatus } from "./definitions";
+import { CreateAuditLog, TInvoiceStatus } from "./definitions";
 
 const FormSchema = z.object({
   id: z.string(),
@@ -75,6 +75,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
 
 export async function updateInvoice(
   id: string,
+  oldStatus: TInvoiceStatus,
   prevState: State,
   formData: FormData
 ) {
@@ -95,17 +96,49 @@ export async function updateInvoice(
   const amountInCents = amount * 100;
 
   try {
-    await sql`
+    // await sql`
+    //   UPDATE invoices
+    //   SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+    //   WHERE id = ${id}
+    // `;
+
+    await Promise.all([
+      await sql`
       UPDATE invoices
       SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
       WHERE id = ${id}
-    `;
+    `,
+      createAuditLog({
+        action_type: "change",
+        invoice_id: id,
+        old_status: oldStatus,
+        new_status: status,
+      }),
+    ]);
   } catch (error) {
     return { message: "Database Error: Failed to Update Invoice." };
   }
 
   revalidatePath("/dashboard/invoices");
   redirect("/dashboard/invoices");
+}
+
+export async function updateInvoiceStatusAndCreateAuditLog(
+  data: CreateAuditLog
+) {
+  try {
+    await Promise.all([
+      updateInvoiceStatus(data.invoice_id, data.new_status),
+      createAuditLog(data),
+    ]);
+
+    revalidatePath(`/dashboard/invoices/${data.invoice_id}/edit`);
+  } catch (error) {
+    return {
+      message:
+        "Database Error: Failed to update invoice status and create Audit log.",
+    };
+  }
 }
 
 export async function updateInvoiceStatus(id: string, status: TInvoiceStatus) {
@@ -146,6 +179,33 @@ export async function cancelInvoice(id: string) {
     return { message: "Canceled Invoice" };
   } catch (error) {
     return { message: "Database Error: Failed to Cancel Invoice." };
+  }
+}
+
+export async function createAuditLog(data: CreateAuditLog) {
+  const date = new Date().toISOString().split("T")[0];
+
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return {
+      message: "Could get logged in user id.",
+    };
+  }
+
+  const userId = session?.user?.id;
+
+  // Insert data into the database
+  try {
+    await sql`
+      INSERT INTO audit_logs (user_id, invoice_id, old_status, new_status, action_type, date)
+      VALUES (${userId}, ${data.invoice_id}, ${data.old_status}, ${data.new_status}, ${data.action_type}, ${date})
+    `;
+  } catch (error) {
+    // If a database error occurs, return a more specific error.
+    return {
+      message: "Database Error: Failed to Create Audit Log.",
+    };
   }
 }
 
