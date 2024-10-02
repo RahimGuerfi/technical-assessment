@@ -124,10 +124,10 @@ export async function GET() {
   // });
   try {
     await client.sql`BEGIN`;
-    // await seedUsers();
-    // await seedCustomers();
-    // await seedInvoices();
-    // await seedRevenue();
+    await seedUsers();
+    await seedCustomers();
+    await seedInvoices();
+    await seedRevenue();
     await createAuditLogsTable();
     await client.sql`COMMIT`;
 
